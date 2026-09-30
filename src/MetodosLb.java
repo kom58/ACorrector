@@ -2,7 +2,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Calendar;
 
 public class MetodosLb {
 
@@ -108,6 +110,68 @@ public class MetodosLb {
         }
 
         return ruta;
+    }
+
+
+    public void  escribirInforme() {
+
+        Datos d = new Datos();
+
+        String nombreInforme = d.getUsuarioActual() + ".lgx";
+        String rutaFichero = d.getCarpetaFch() + "/" + nombreInforme;
+
+        StringBuilder txt = new StringBuilder();
+
+        try {
+
+            // true = añadir al final del archivo
+            FileWriter f = new FileWriter(rutaFichero, false);
+
+            txt.append("\n       *********************************\n\n");
+            txt.append("                  ").append(d.getUsuarioActual()).append("\n\n");
+            txt.append("                  ").append(fechaActual()).append("\n");
+            txt.append("                     ").append(horaActual()).append("\n");
+            txt.append("\n            ***********************\n\n");
+            txt.append("FICHA : ").append(d.getNombreFch()).append("\n\n");
+
+            txt.append("[[[ Respuesta ]]]\n\n");
+
+            txt.append(d.getRespUsuario()).append("\n");
+
+
+            f.write(txt.toString());
+            f.close();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+
+    public String fechaActual() {
+
+        String fechaAc;
+        Calendar ahora = Calendar.getInstance();
+        int diaA = ahora.get(Calendar.DAY_OF_MONTH);
+        int mesA = ahora.get(Calendar.MONTH) + 1;
+        int anoA = ahora.get(Calendar.YEAR);
+
+        fechaAc = String.format("%02d.%02d.%04d", diaA, mesA, anoA);
+
+        return fechaAc;
+    }
+
+    public String horaActual() {
+
+        String horaAc;
+        Calendar ahora = Calendar.getInstance();
+        int horaA = ahora.get(Calendar.HOUR_OF_DAY);
+        int minA = ahora.get(Calendar.MINUTE);
+
+        horaAc = String.format("%02d:%02d", horaA, minA);
+
+        return horaAc;
     }
 
 }

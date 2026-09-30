@@ -59,16 +59,16 @@ public class BlocDeTexto extends JFrame {
         JMenuBar barra = new JMenuBar();
         JMenu archivo = new JMenu("Archivo");
 
-        JMenuItem nuevo = new JMenuItem("Nuevo");
-        JMenuItem abrir = new JMenuItem("Abrir");
+        //JMenuItem nuevo = new JMenuItem("Nuevo");
+        //JMenuItem abrir = new JMenuItem("Abrir");
         JMenuItem guardar = new JMenuItem("Guardar");
 
-        nuevo.addActionListener(e -> texto.setText(""));
-        abrir.addActionListener(e -> abrirArchivo());
-        guardar.addActionListener(e -> guardarArchivo());
+        //nuevo.addActionListener(e -> texto.setText(""));
+        //abrir.addActionListener(e -> abrirArchivo());
+        guardar.addActionListener(e -> guardarSalir());
 
-        archivo.add(nuevo);
-        archivo.add(abrir);
+        //archivo.add(nuevo);
+        //archivo.add(abrir);
         archivo.add(guardar);
 
         barra.add(archivo);
@@ -92,6 +92,7 @@ public class BlocDeTexto extends JFrame {
     }
 
     public void cargarArchivo(File archivo) {
+
         try {
             String contenido = Files.readString(
                     archivo.toPath(),
@@ -103,9 +104,19 @@ public class BlocDeTexto extends JFrame {
         } catch (IOException e) {
             mostrarError("No se pudo abrir el archivo.");
         }
+
     }
 
-    private void guardarArchivo() {
+    private void guardarSalir() {
+
+
+        Datos.respUsuario  = texto.getText();
+        MetodosLb m = new MetodosLb();
+        m.escribirInforme();
+
+        System.exit(0);
+
+        /*
         if (selector.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
             try {
                 Files.writeString(
@@ -117,6 +128,8 @@ public class BlocDeTexto extends JFrame {
                 mostrarError("No se pudo guardar el archivo.");
             }
         }
+
+         */
     }
 
     private void mostrarError(String mensaje) {

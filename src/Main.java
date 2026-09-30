@@ -55,8 +55,10 @@ public class Main {
             return;
         }
 
+        Datos d = new Datos();
         Datos.nombreFch = archivoHtm.getName();
         Datos.archivoInicialFch = archivoHtm.getAbsolutePath();
+        d.setArchivoInicialFch(archivoHtm.getAbsolutePath());               /// !!!
 
         abrirEnNavegador(archivoHtm);
 
