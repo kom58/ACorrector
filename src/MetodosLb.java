@@ -2,8 +2,12 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.Calendar;
 
 public class MetodosLb {
@@ -113,42 +117,64 @@ public class MetodosLb {
     }
 
 
-    public void  escribirInforme() {
+    public Path escribirInforme() throws IOException {
 
         Datos d = new Datos();
 
-        String nombreInforme = d.getUsuarioActual() + ".lgx";
-        String rutaFichero = d.getCarpetaFch() + "/" + nombreInforme;
+        if (d.getCarpetaFch() == null || d.getCarpetaFch().isBlank()) {
+            throw new IOException("No se ha podido determinar la carpeta del informe.");
+        }
+
+        String nombreInforme = nombreArchivoSeguro(d.getUsuarioActual()) + ".lgx";
+        final Path rutaFichero;
+        try {
+            rutaFichero = Path.of(d.getCarpetaFch()).resolve(nombreInforme);
+        } catch (InvalidPathException e) {
+            throw new IOException("La ruta del informe no es válida.", e);
+        }
 
         StringBuilder txt = new StringBuilder();
 
-        try {
+        txt.append("\n       *********************************\n\n");
+        txt.append("                  ").append(d.getUsuarioActual()).append("\n\n");
+        txt.append("                  ").append(fechaActual()).append("\n");
+        txt.append("                     ").append(horaActual()).append("\n");
+        txt.append("\n            ***********************\n\n");
+        txt.append("FICHA    :    ").append(d.getNombreFch()).append("\n\n");
+        txt.append("Hora de inicio       : ").append(d.getHoraInicio()).append("\n");
+        txt.append("Hora de finalización : ").append(d.getHoraFin()).append("\n\n");
+        txt.append("[[[ Respuesta ]]]\n\n");
+        txt.append(d.getRespUsuario()).append("\n");
 
-            // true = añadir al final del archivo
-            FileWriter f = new FileWriter(rutaFichero, false);
+        Files.writeString(
+                rutaFichero,
+                txt.toString(),
+                StandardCharsets.UTF_8,
+                StandardOpenOption.CREATE,
+                StandardOpenOption.TRUNCATE_EXISTING
+        );
 
-            txt.append("\n       *********************************\n\n");
-            txt.append("                  ").append(d.getUsuarioActual()).append("\n\n");
-            txt.append("                  ").append(fechaActual()).append("\n");
-            txt.append("                     ").append(horaActual()).append("\n");
-            txt.append("\n            ***********************\n\n");
-            txt.append("FICHA    :    ").append(d.getNombreFch()).append("\n\n");
-            txt.append("Hora de inicio       : ").append(d.getHoraInicio()).append("\n");
-            txt.append("Hora de finalización : ").append(d.getHoraFin()).append("\n\n");
+        return rutaFichero;
+    }
 
+    private String nombreArchivoSeguro(String nombre) {
+        String nombreSeguro = nombre == null ? "" : nombre.trim();
 
-            txt.append("[[[ Respuesta ]]]\n\n");
+        // Caracteres no admitidos por Windows y caracteres de control.
+        nombreSeguro = nombreSeguro.replaceAll("[\\\\/:*?\"<>|\\p{Cntrl}]", "_");
+        // Windows tampoco permite que un nombre termine en un punto o espacio.
+        nombreSeguro = nombreSeguro.replaceAll("[. ]+$", "");
 
-            txt.append(d.getRespUsuario()).append("\n");
-
-
-            f.write(txt.toString());
-            f.close();
-
-        } catch (IOException e) {
-            e.printStackTrace();
+        if (nombreSeguro.isBlank()) {
+            nombreSeguro = "informe";
         }
 
+        // Nombres reservados por Windows, incluso cuando llevan extensión.
+        if (nombreSeguro.matches("(?i)CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9]")) {
+            nombreSeguro = "_" + nombreSeguro;
+        }
+
+        return nombreSeguro;
     }
 
 

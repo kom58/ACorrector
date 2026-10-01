@@ -108,15 +108,17 @@ public class BlocDeTexto extends JFrame {
     }
 
     private void guardarSalir() {
-
-
         Datos.respUsuario  = texto.getText();
         MetodosLb m = new MetodosLb();
         Datos d = new Datos();
         d.setHoraFin(m.horaActual());
-        m.escribirInforme();
 
-        System.exit(0);
+        try {
+            m.escribirInforme();
+            System.exit(0);
+        } catch (IOException | SecurityException e) {
+            mostrarError("No se pudo guardar el informe:\n" + e.getMessage());
+        }
 
         /*
         if (selector.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {

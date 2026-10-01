@@ -1,4 +1,6 @@
 
+import java.nio.file.Path;
+
 public class Datos {
     public static String usuarioActual;
     public static String nombreFch;
@@ -22,9 +24,9 @@ public class Datos {
     public void setArchivoInicialFch(String archIniF) {
         archivoInicialFch = archIniF;
         if (archIniF == null || archIniF.isEmpty()) { carpetaFch = ""; return;}
-        int lastIndex = archIniF.lastIndexOf("/");
-        if (lastIndex >= 0) { carpetaFch = archIniF.substring(0, lastIndex);}
-        else { carpetaFch = "";}
+        Path rutaArchivo = Path.of(archIniF).toAbsolutePath().normalize();
+        Path carpeta = rutaArchivo.getParent();
+        carpetaFch = carpeta == null ? "" : carpeta.toString();
     }
 
     public String getUsuarioActual(){ return usuarioActual;}
