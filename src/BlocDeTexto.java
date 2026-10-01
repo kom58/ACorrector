@@ -112,6 +112,8 @@ public class BlocDeTexto extends JFrame {
 
         Datos.respUsuario  = texto.getText();
         MetodosLb m = new MetodosLb();
+        Datos d = new Datos();
+        d.setHoraFin(m.horaActual());
         m.escribirInforme();
 
         System.exit(0);

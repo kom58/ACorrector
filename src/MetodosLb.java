@@ -132,7 +132,10 @@ public class MetodosLb {
             txt.append("                  ").append(fechaActual()).append("\n");
             txt.append("                     ").append(horaActual()).append("\n");
             txt.append("\n            ***********************\n\n");
-            txt.append("FICHA : ").append(d.getNombreFch()).append("\n\n");
+            txt.append("FICHA    :    ").append(d.getNombreFch()).append("\n\n");
+            txt.append("Hora de inicio       : ").append(d.getHoraInicio()).append("\n");
+            txt.append("Hora de finalización : ").append(d.getHoraFin()).append("\n\n");
+
 
             txt.append("[[[ Respuesta ]]]\n\n");
 

@@ -13,7 +13,12 @@ public class Main {
     }
 
     private static void iniciarAplicacion() {
+
         Datos.inicializar();
+
+        Datos d = new Datos();
+        MetodosLb m = new MetodosLb();
+        d.setHoraInicio(m.horaActual());
 
         String usuarioActual;
 
@@ -55,7 +60,7 @@ public class Main {
             return;
         }
 
-        Datos d = new Datos();
+        //Datos d = new Datos();
         Datos.nombreFch = archivoHtm.getName();
         Datos.archivoInicialFch = archivoHtm.getAbsolutePath();
         d.setArchivoInicialFch(archivoHtm.getAbsolutePath());               /// !!!
