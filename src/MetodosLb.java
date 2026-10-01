@@ -3,14 +3,136 @@ import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Calendar;
+import java.util.regex.Pattern;
 
 public class MetodosLb {
+
+    private static final String NOMBRE_ARCHIVO_CONFIGURACION = "acr.ini";
+    private static final Pattern PATRON_EMAIL = Pattern.compile(
+            "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"
+    );
+
+    public Path rutaArchivoAcrIni() {
+        try {
+            Path ubicacionAplicacion = Path.of(
+                    MetodosLb.class.getProtectionDomain()
+                            .getCodeSource()
+                            .getLocation()
+                            .toURI()
+            ).toAbsolutePath().normalize();
+
+            // Al ejecutar un JAR, su carpeta es la carpeta de la aplicacion.
+            if (Files.isRegularFile(ubicacionAplicacion)) {
+                Path carpetaJar = ubicacionAplicacion.getParent();
+                if (carpetaJar != null) {
+                    return carpetaJar.resolve(NOMBRE_ARCHIVO_CONFIGURACION);
+                }
+            }
+        } catch (NullPointerException | SecurityException | URISyntaxException e) {
+            // Si no se puede obtener la ubicacion del codigo, se usa el
+            // directorio desde el que se ha iniciado la aplicacion.
+        }
+
+        return Path.of(System.getProperty("user.dir"))
+                .toAbsolutePath()
+                .normalize()
+                .resolve(NOMBRE_ARCHIVO_CONFIGURACION);
+    }
+
+    public boolean crearArchivoAcrIni() throws IOException {
+        String email = pedirEmailValido();
+        if (email == null) {
+            return false;
+        }
+
+        JComboBox<String> selectorIdioma = new JComboBox<>(
+                new String[]{"Español", "Català"}
+        );
+        int resultado = JOptionPane.showConfirmDialog(
+                null,
+                new Object[]{"Selecciona el idioma:", selectorIdioma},
+                "Idioma",
+                JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.QUESTION_MESSAGE
+        );
+
+        if (resultado != JOptionPane.OK_OPTION) {
+            return false;
+        }
+
+        String idioma = (String) selectorIdioma.getSelectedItem();
+        String contenido = "email=" + email + System.lineSeparator()
+                + "idioma=" + idioma + System.lineSeparator();
+
+        Path archivoAcrIni = rutaArchivoAcrIni();
+        Files.writeString(
+                archivoAcrIni,
+                contenido,
+                StandardCharsets.UTF_8,
+                StandardOpenOption.CREATE_NEW,
+                StandardOpenOption.WRITE
+        );
+        return true;
+    }
+
+    public String leerArchivoAcrIni() throws IOException {
+        String contenido = Files.readString(
+                rutaArchivoAcrIni(),
+                StandardCharsets.UTF_8
+        );
+
+        Datos datos = new Datos();
+        for (String linea : contenido.split("\\R")) {
+            String[] propiedad = linea.split("=", 2);
+            if (propiedad.length != 2) {
+                continue;
+            }
+
+            String clave = propiedad[0].trim();
+            String valor = propiedad[1].trim();
+            if (clave.equals("email")) {
+                datos.setEmailUsuario(valor);
+            } else if (clave.equals("idioma")) {
+                datos.setIdioma(valor);
+            }
+        }
+
+        return contenido;
+    }
+
+    private String pedirEmailValido() {
+        while (true) {
+            String email = JOptionPane.showInputDialog(
+                    null,
+                    "Introduce tu email:",
+                    "Configuración inicial",
+                    JOptionPane.QUESTION_MESSAGE
+            );
+
+            if (email == null) {
+                return null;
+            }
+
+            email = email.trim();
+            if (PATRON_EMAIL.matcher(email).matches()) {
+                return email;
+            }
+
+            JOptionPane.showMessageDialog(
+                    null,
+                    "Introduce un email válido.",
+                    "Email no válido",
+                    JOptionPane.WARNING_MESSAGE
+            );
+        }
+    }
 
     public String detectarSistemaOperativo() {
 

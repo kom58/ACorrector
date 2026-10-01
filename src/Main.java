@@ -1,6 +1,8 @@
 import java.awt.Desktop;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
@@ -14,10 +16,40 @@ public class Main {
 
     private static void iniciarAplicacion() {
 
+        MetodosLb m = new MetodosLb();
+        Path archivoAcrIni = m.rutaArchivoAcrIni();
+
+        try {
+            if (Files.notExists(archivoAcrIni)) {
+                if (!m.crearArchivoAcrIni()) {
+                    return;
+                }
+            }
+        } catch (IOException | SecurityException e) {
+            JOptionPane.showMessageDialog(
+                    null,
+                    "No se pudo crear acr.ini:\n" + e.getMessage(),
+                    "Error de configuracion",
+                    JOptionPane.ERROR_MESSAGE
+            );
+            return;
+        }
+
         Datos.inicializar();
 
+        try {
+            m.leerArchivoAcrIni();
+        } catch (IOException | SecurityException e) {
+            JOptionPane.showMessageDialog(
+                    null,
+                    "No se pudo leer acr.ini:\n" + e.getMessage(),
+                    "Error de configuracion",
+                    JOptionPane.ERROR_MESSAGE
+            );
+            return;
+        }
+
         Datos d = new Datos();
-        MetodosLb m = new MetodosLb();
         d.setHoraInicio(m.horaActual());
 
         String usuarioActual;

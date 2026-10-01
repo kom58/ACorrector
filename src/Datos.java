@@ -11,6 +11,7 @@ public class Datos {
     public static String carpetaFch;
     public static String horaInicio;
     public static String horaFin;
+    public static String idioma;
 
 
     public void setUsuarioActual(String usuario){ usuarioActual = usuario;}
@@ -20,6 +21,7 @@ public class Datos {
     public void setRespUsuario( String respF) {respUsuario = respF;}
     public void setHoraInicio(String horaIni) {horaInicio = horaIni;}
     public void setHoraFin(String horaF) { horaFin = horaF;}
+    public void setIdioma(String idioma) {idioma = idioma;}
 
     public void setArchivoInicialFch(String archIniF) {
         archivoInicialFch = archIniF;
@@ -38,6 +40,7 @@ public class Datos {
     public String getCarpetaFch(){ return carpetaFch;}
     public String getHoraInicio(){ return horaInicio;}
     public String getHoraFin(){ return horaFin;}
+    public String getIdioma(){ return idioma;}
 
 
 
@@ -51,6 +54,7 @@ public class Datos {
         carpetaFch = "";
         horaInicio = "";
         horaFin = "";
+        idioma = "";
     }
 
 }

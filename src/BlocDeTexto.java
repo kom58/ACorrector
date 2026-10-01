@@ -132,7 +132,6 @@ public class BlocDeTexto extends JFrame {
                 mostrarError("No se pudo guardar el archivo.");
             }
         }
-
          */
     }
 
