@@ -18,6 +18,7 @@ public class Main {
 
         MetodosLb m = new MetodosLb();
         Path archivoAcrIni = m.rutaArchivoAcrIni();
+        Datos.inicializar();
 
         try {
             if (Files.notExists(archivoAcrIni)) {
@@ -28,22 +29,22 @@ public class Main {
         } catch (IOException | SecurityException e) {
             JOptionPane.showMessageDialog(
                     null,
-                    "No se pudo crear acr.ini:\n" + e.getMessage(),
-                    "Error de configuracion",
+                    mensajeSeguro(m, "1010", "No se pudo crear")
+                            + " acr.ini:\n" + e.getMessage(),
+                    mensajeSeguro(m, "1011", "Error de configuración"),
                     JOptionPane.ERROR_MESSAGE
             );
             return;
         }
-
-        Datos.inicializar();
 
         try {
             m.leerArchivoAcrIni();
         } catch (IOException | SecurityException e) {
             JOptionPane.showMessageDialog(
                     null,
-                    "No se pudo leer acr.ini:\n" + e.getMessage(),
-                    "Error de configuracion",
+                    mensajeSeguro(m, "1012", "No se pudo leer")
+                            + " acr.ini:\n" + e.getMessage(),
+                    mensajeSeguro(m, "1011", "Error de configuración"),
                     JOptionPane.ERROR_MESSAGE
             );
             return;
@@ -52,13 +53,50 @@ public class Main {
         Datos d = new Datos();
         d.setHoraInicio(m.horaActual());
 
+        final String tituloInicioSesion;
+        final String mensajeNombre;
+        final String mensajeNombreVacio;
+        final String tituloNombreNoValido;
+        final String mensajeBienvenida;
+        final String tituloBienvenida;
+        final String errorNavegador;
+        final String tituloError;
+        final String errorAbrirArchivo;
+        final String tituloSeleccionarArchivo;
+        final String descripcionArchivos;
+        try {
+            tituloInicioSesion = m.leerMensajeIdioma("1001");
+            mensajeNombre = m.leerMensajeIdioma("1002");
+            mensajeNombreVacio = m.leerMensajeIdioma("1003");
+            tituloNombreNoValido = m.leerMensajeIdioma("1004");
+            mensajeBienvenida = m.leerMensajeIdioma("1005");
+            tituloBienvenida = m.leerMensajeIdioma("1006");
+            errorNavegador = m.leerMensajeIdioma("1030");
+            tituloError = m.leerMensajeIdioma("1031");
+            errorAbrirArchivo = m.leerMensajeIdioma("1040");
+            tituloSeleccionarArchivo = m.leerMensajeIdioma("1050");
+            descripcionArchivos = m.leerMensajeIdioma("1051");
+        } catch (IOException | SecurityException e) {
+            JOptionPane.showMessageDialog(
+                    null,
+                    mensajeSeguro(
+                            m,
+                            "1020",
+                            "No se pudieron cargar los mensajes del idioma"
+                    ) + ":\n" + e.getMessage(),
+                    mensajeSeguro(m, "1021", "Error de idioma"),
+                    JOptionPane.ERROR_MESSAGE
+            );
+            return;
+        }
+
         String usuarioActual;
 
         do {
             usuarioActual = JOptionPane.showInputDialog(
                     null,
-                    "Introduce tu nombre:",
-                    "Inicio de sesión",
+                    mensajeNombre,
+                    tituloInicioSesion,
                     JOptionPane.QUESTION_MESSAGE
             );
 
@@ -71,8 +109,8 @@ public class Main {
             if (usuarioActual.isEmpty()) {
                 JOptionPane.showMessageDialog(
                         null,
-                        "El nombre no puede estar vacío.",
-                        "Nombre no válido",
+                        mensajeNombreVacio,
+                        tituloNombreNoValido,
                         JOptionPane.WARNING_MESSAGE
                 );
             }
@@ -82,12 +120,15 @@ public class Main {
 
         JOptionPane.showMessageDialog(
                 null,
-                "¡Bienvenido, " + Datos.usuarioActual + "!",
-                "Bienvenida",
+                mensajeBienvenida + ", " + Datos.usuarioActual + "!",
+                tituloBienvenida,
                 JOptionPane.INFORMATION_MESSAGE
         );
 
-        File archivoHtm = seleccionarArchivoHtm();
+        File archivoHtm = seleccionarArchivoHtm(
+                tituloSeleccionarArchivo,
+                descripcionArchivos
+        );
         if (archivoHtm == null) {
             return;
         }
@@ -97,7 +138,12 @@ public class Main {
         Datos.archivoInicialFch = archivoHtm.getAbsolutePath();
         d.setArchivoInicialFch(archivoHtm.getAbsolutePath());               /// !!!
 
-        abrirEnNavegador(archivoHtm);
+        abrirEnNavegador(
+                archivoHtm,
+                errorNavegador,
+                tituloError,
+                errorAbrirArchivo
+        );
 
         BlocDeTexto blocDeTexto = new BlocDeTexto(1, 1);
         mostrarBlocEnPrimerPlano(blocDeTexto);
@@ -122,13 +168,18 @@ public class Main {
         temporizador.start();
     }
 
-    private static void abrirEnNavegador(File archivoHtm) {
+    private static void abrirEnNavegador(
+            File archivoHtm,
+            String errorNavegador,
+            String tituloError,
+            String errorAbrirArchivo
+    ) {
         if (!Desktop.isDesktopSupported()
                 || !Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
             JOptionPane.showMessageDialog(
                     null,
-                    "No se puede abrir el navegador predeterminado.",
-                    "Error",
+                    errorNavegador,
+                    tituloError,
                     JOptionPane.ERROR_MESSAGE
             );
             return;
@@ -139,20 +190,25 @@ public class Main {
         } catch (IOException e) {
             JOptionPane.showMessageDialog(
                     null,
-                    "No se pudo abrir el archivo en el navegador.",
-                    "Error",
+                    errorAbrirArchivo,
+                    tituloError,
                     JOptionPane.ERROR_MESSAGE
             );
         }
     }
 
-    private static File seleccionarArchivoHtm() {
+    private static File seleccionarArchivoHtm(
+            String tituloSeleccionarArchivo,
+        String descripcionArchivos
+    ) {
         JFileChooser selector = new JFileChooser();
-        selector.setDialogTitle("Selecciona un archivo HTML o PDF");
+        selector.setDialogTitle(tituloSeleccionarArchivo + " HTML o PDF");
         selector.setAcceptAllFileFilterUsed(false);
         selector.setFileFilter(
                 new FileNameExtensionFilter(
-                        "Archivos HTML y PDF (*.htm, *.html, *.pdf, *,jpg, *,gif, *.png)",
+                        descripcionArchivos
+                                + ": HTML, PDF, JPG, GIF, PNG "
+                                + "(*.htm, *.html, *.pdf, *.jpg, *.gif, *.png)",
                         "htm",
                         "html",
                         "pdf",
@@ -169,5 +225,17 @@ public class Main {
         }
 
         return null;
+    }
+
+    private static String mensajeSeguro(
+            MetodosLb metodos,
+            String codigo,
+            String mensajePredeterminado
+    ) {
+        try {
+            return metodos.leerMensajeIdioma(codigo);
+        } catch (IOException | SecurityException e) {
+            return mensajePredeterminado;
+        }
     }
 }

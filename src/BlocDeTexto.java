@@ -10,9 +10,16 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 
 public class BlocDeTexto extends JFrame {
+    private static final long serialVersionUID = 1L;
+    private static final MetodosLb METODOS = new MetodosLb();
     private final JTextArea texto = new JTextArea();
     private final JFileChooser selector = new JFileChooser();
-    private final JLabel contador = new JLabel("Palabras: 0");
+    private final JLabel contador = new JLabel();
+
+    private final String etiquetaPalabras;
+    private final String tituloError;
+    private final String errorAbrirArchivo;
+    private final String errorGuardarInforme;
 
     private final int numPreg;
     private final int totalPreg;
@@ -22,7 +29,12 @@ public class BlocDeTexto extends JFrame {
         this.numPreg = numPreg;
         this.totalPreg = totalPreg;
 
-        setTitle("Respondiendo a :  " + Datos.nombreFch);
+        etiquetaPalabras = mensajeSeguro("2001", "Palabras");
+        tituloError = mensajeSeguro("1031", "Error");
+        errorAbrirArchivo = mensajeSeguro("2020", "No se pudo abrir el archivo");
+        errorGuardarInforme = mensajeSeguro("2030", "No se pudo guardar el informe");
+
+        setTitle(mensajeSeguro("2010", "Respondiendo a") + ": " + Datos.nombreFch);
         setSize(700, 500);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         //setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);         // No deja cerrar !!!!
@@ -35,6 +47,7 @@ public class BlocDeTexto extends JFrame {
         add(new JScrollPane(texto), BorderLayout.CENTER);
 
         // Contador de palabras
+        contador.setText(etiquetaPalabras + ": 0");
         contador.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
         add(contador, BorderLayout.SOUTH);
 
@@ -57,11 +70,11 @@ public class BlocDeTexto extends JFrame {
 
         // Menú Archivo
         JMenuBar barra = new JMenuBar();
-        JMenu archivo = new JMenu("Archivo");
+        JMenu archivo = new JMenu(mensajeSeguro("1052", "Archivo"));
 
         //JMenuItem nuevo = new JMenuItem("Nuevo");
         //JMenuItem abrir = new JMenuItem("Abrir");
-        JMenuItem guardar = new JMenuItem("Guardar");
+        JMenuItem guardar = new JMenuItem(mensajeSeguro("1053", "Guardar"));
 
         //nuevo.addActionListener(e -> texto.setText(""));
         //abrir.addActionListener(e -> abrirArchivo());
@@ -82,7 +95,7 @@ public class BlocDeTexto extends JFrame {
                 ? 0
                 : contenido.split("\\s+").length;
 
-        contador.setText("Palabras: " + palabras);
+        contador.setText(etiquetaPalabras + ": " + palabras);
     }
 
     private void abrirArchivo() {
@@ -102,22 +115,21 @@ public class BlocDeTexto extends JFrame {
             texto.setText(contenido);
             texto.setCaretPosition(0);
         } catch (IOException e) {
-            mostrarError("No se pudo abrir el archivo.");
+            mostrarError(errorAbrirArchivo);
         }
 
     }
 
     private void guardarSalir() {
         Datos.respUsuario  = texto.getText();
-        MetodosLb m = new MetodosLb();
         Datos d = new Datos();
-        d.setHoraFin(m.horaActual());
+        d.setHoraFin(METODOS.horaActual());
 
         try {
-            m.escribirInforme();
+            METODOS.escribirInforme();
             System.exit(0);
         } catch (IOException | SecurityException e) {
-            mostrarError("No se pudo guardar el informe:\n" + e.getMessage());
+            mostrarError(errorGuardarInforme + ":\n" + e.getMessage());
         }
 
         /*
@@ -139,8 +151,16 @@ public class BlocDeTexto extends JFrame {
         JOptionPane.showMessageDialog(
                 this,
                 mensaje,
-                "Error",
+                tituloError,
                 JOptionPane.ERROR_MESSAGE
         );
+    }
+
+    private String mensajeSeguro(String codigo, String mensajePredeterminado) {
+        try {
+            return METODOS.leerMensajeIdioma(codigo);
+        } catch (IOException | SecurityException e) {
+            return mensajePredeterminado;
+        }
     }
 }

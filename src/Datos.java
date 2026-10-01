@@ -21,7 +21,7 @@ public class Datos {
     public void setRespUsuario( String respF) {respUsuario = respF;}
     public void setHoraInicio(String horaIni) {horaInicio = horaIni;}
     public void setHoraFin(String horaF) { horaFin = horaF;}
-    public void setIdioma(String idioma) {idioma = idioma;}
+    public void setIdioma(String idioma) {Datos.idioma = idioma;}
 
     public void setArchivoInicialFch(String archIniF) {
         archivoInicialFch = archIniF;
