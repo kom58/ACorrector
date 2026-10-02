@@ -1,7 +1,5 @@
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.KeyEvent;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
@@ -54,7 +52,7 @@ public class MetodosLb {
         }
 
         JComboBox<String> selectorIdioma = new JComboBox<>(
-                new String[]{"Español", "Català"}
+                new String[]{"Español", "Català", "Valencià"}
         );
         int resultado = JOptionPane.showConfirmDialog(
                 null,
@@ -69,9 +67,9 @@ public class MetodosLb {
         }
 
         String idioma = (String) selectorIdioma.getSelectedItem();
-        Datos datos = new Datos();
-        datos.setEmailUsuario(email);
-        datos.setIdioma(idioma);
+        Datos dat = new Datos();
+        dat.setEmailUsuario(email);
+        dat.setIdioma(idioma);
 
         String contenido = "email=" + email + System.lineSeparator()
                 + "idioma=" + idioma + System.lineSeparator();
@@ -116,12 +114,15 @@ public class MetodosLb {
         String idioma = new Datos().getIdioma();
         final String nombreArchivo;
 
-        if ("Español".equals(idioma)) {
+        if ("Español".equalsIgnoreCase(idioma)) {
             nombreArchivo = "Español.lng";
-        } else if ("Català".equals(idioma)) {
+        } else if ("Català".equalsIgnoreCase(idioma)
+                || "Valencià".equalsIgnoreCase(idioma)) {
             nombreArchivo = "Català.lng";
         } else {
-            throw new IOException("El idioma configurado no es válido: " + idioma);
+            throw new IOException(
+                    "El idioma configurado no es válido: " + idioma
+            );
         }
 
         String contenido = leerContenidoIdioma(nombreArchivo);
@@ -246,25 +247,28 @@ public class MetodosLb {
         txt.append(ed.encripLin(horaActual(), clave));
         txt.append(ed.encripLin("\n", clave));
         txt.append(ed.encripLin("\n            ***********************\n\n", clave));
-        txt.append(ed.encripLin(
-                String.format("%-9s:    ", mensajeSeguro("3050", "FICHA")),
-                clave
-        ));
+        txt.append(ed.encripLin("FICHA    :    ", clave));
+        //txt.append(ed.encripLin(
+        //        String.format("%-9s:    ", mensajeSeguro("30500", "FICHA")),
+        //        clave
+        //));
         txt.append(ed.encripLin(d.getNombreFch(), clave));
         txt.append(ed.encripLin("\n\n", clave));
-        txt.append(ed.encripLin(
-                String.format("%-21s: ", mensajeSeguro("3060", "Hora de inicio")),
-                clave
-        ));
+        txt.append(ed.encripLin("Hora de inicio       : ", clave));
+        //txt.append(ed.encripLin(
+        //        String.format("%-21s: ", mensajeSeguro("30600", "Hora de inicio")),
+        //        clave
+        //));
         txt.append(ed.encripLin(d.getHoraInicio(), clave));
         txt.append(ed.encripLin("\n", clave));
-        txt.append(ed.encripLin(
-                String.format(
-                        "%-21s: ",
-                        mensajeSeguro("3070", "Hora de finalización")
-                ),
-                clave
-        ));
+        txt.append(ed.encripLin("Hora de finalización : ", clave));
+        //txt.append(ed.encripLin(
+        //        String.format(
+        //                "%-21s: ",
+        //                mensajeSeguro("30700", "Hora de finalización")
+        //        ),
+        //        clave
+        //));
         txt.append(ed.encripLin(d.getHoraFin(), clave));
         txt.append(ed.encripLin("\n\n", clave));
         txt.append(ed.encripLin("[[[ R ]]]", clave));

@@ -10,7 +10,7 @@ import javax.swing.Timer;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 public class Main {
-    public static void main(String[] args) {
+    static void main(String[] args) {
         SwingUtilities.invokeLater(Main::iniciarAplicacion);
     }
 
@@ -136,7 +136,7 @@ public class Main {
         //Datos d = new Datos();
         Datos.nombreFch = archivoHtm.getName();
         Datos.archivoInicialFch = archivoHtm.getAbsolutePath();
-        d.setArchivoInicialFch(archivoHtm.getAbsolutePath());               /// !!!
+        d.setArchivoInicialFch(archivoHtm.getAbsolutePath());               // !!!
 
         abrirEnNavegador(
                 archivoHtm,
