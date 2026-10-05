@@ -14,11 +14,39 @@ import java.util.regex.Pattern;
 public class MetodosLb {
 
     private static final String NOMBRE_ARCHIVO_CONFIGURACION = "acr.ini";
+    private static final String PROPIEDAD_CARPETA_CONFIGURACION =
+            "acorrector.configDir";
     private static final Pattern PATRON_EMAIL = Pattern.compile(
             "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"
     );
 
+    public String versionACrr() {
+        return "0.0.1";
+    }
+
     public Path rutaArchivoAcrIni() {
+        String carpetaConfiguracion = System.getProperty(
+                PROPIEDAD_CARPETA_CONFIGURACION
+        );
+        if (carpetaConfiguracion != null && !carpetaConfiguracion.isBlank()) {
+            try {
+                Path carpetaEjecutable = Path.of(carpetaConfiguracion)
+                        .toAbsolutePath()
+                        .normalize();
+                Path juntoEjecutable = carpetaEjecutable.resolve(
+                        NOMBRE_ARCHIVO_CONFIGURACION
+                );
+                if (Files.isRegularFile(juntoEjecutable)
+                        || (Files.isDirectory(carpetaEjecutable)
+                        && Files.isWritable(carpetaEjecutable))) {
+                    return juntoEjecutable;
+                }
+            } catch (InvalidPathException | SecurityException e) {
+                // Si la carpeta del ejecutable no es utilizable, se conserva
+                // la ubicacion alternativa junto al JAR extraido.
+            }
+        }
+
         try {
             Path ubicacionAplicacion = Path.of(
                     MetodosLb.class.getProtectionDomain()
@@ -52,7 +80,15 @@ public class MetodosLb {
         }
 
         JComboBox<String> selectorIdioma = new JComboBox<>(
-                new String[]{"Español", "Català", "Valencià"}
+                new String[]{
+                        "Español",
+                        "Català",
+                        "Valencià",
+                        "Galego",
+                        "Euskara",
+                        "Français",
+                        "English",
+                }
         );
         int resultado = JOptionPane.showConfirmDialog(
                 null,
@@ -119,6 +155,14 @@ public class MetodosLb {
         } else if ("Català".equalsIgnoreCase(idioma)
                 || "Valencià".equalsIgnoreCase(idioma)) {
             nombreArchivo = "Català.lng";
+        } else if ("Galego".equalsIgnoreCase(idioma)) {
+            nombreArchivo = "Galego.lng";
+        } else if ("Français".equalsIgnoreCase(idioma)) {
+            nombreArchivo = "Français.lng";
+        } else if ("English".equalsIgnoreCase(idioma)) {
+            nombreArchivo = "English.lng";
+        } else if ("Euskara".equalsIgnoreCase(idioma)) {
+            nombreArchivo = "Euskara.lng";
         } else {
             throw new IOException(
                     "El idioma configurado no es válido: " + idioma
