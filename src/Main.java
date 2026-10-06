@@ -93,11 +93,14 @@ public class Main {
         String usuarioActual;
 
         do {
-            usuarioActual = JOptionPane.showInputDialog(
+            usuarioActual = (String) JOptionPane.showInputDialog(
                     null,
                     mensajeNombre,
                     tituloInicioSesion,
-                    JOptionPane.QUESTION_MESSAGE
+                    JOptionPane.QUESTION_MESSAGE,
+                    null,
+                    null,
+                    d.getUltimoUsuario()
             );
 
             if (usuarioActual == null) {
@@ -116,7 +119,20 @@ public class Main {
             }
         } while (usuarioActual.isEmpty());
 
-        Datos.usuarioActual = usuarioActual;
+        try {
+            m.guardarUltimoUsuario(usuarioActual);
+        } catch (IOException | SecurityException e) {
+            JOptionPane.showMessageDialog(
+                    null,
+                    mensajeSeguro(m, "1013", "No se pudo actualizar")
+                            + " acr.ini:\n" + e.getMessage(),
+                    mensajeSeguro(m, "1011", "Error de configuración"),
+                    JOptionPane.ERROR_MESSAGE
+            );
+            return;
+        }
+
+        d.setUsuarioActual(usuarioActual);
 
         JOptionPane.showMessageDialog(
                 null,

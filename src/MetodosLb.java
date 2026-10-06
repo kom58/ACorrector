@@ -9,6 +9,7 @@ import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Calendar;
+import java.util.List;
 import java.util.regex.Pattern;
 
 public class MetodosLb {
@@ -21,7 +22,7 @@ public class MetodosLb {
     );
 
     public String versionACrr() {
-        return "0.0.1";
+        return "0.0.3";
     }
 
     public Path rutaArchivoAcrIni() {
@@ -108,7 +109,8 @@ public class MetodosLb {
         dat.setIdioma(idioma);
 
         String contenido = "email=" + email + System.lineSeparator()
-                + "idioma=" + idioma + System.lineSeparator();
+                + "idioma=" + idioma + System.lineSeparator()
+                + "ultimo=" + System.lineSeparator();
 
         Path archivoAcrIni = rutaArchivoAcrIni();
         Files.writeString(
@@ -140,10 +142,54 @@ public class MetodosLb {
                 datos.setEmailUsuario(valor);
             } else if (clave.equals("idioma")) {
                 datos.setIdioma(valor);
+            } else if (clave.equals("ultimo")) {
+                datos.setUltimoUsuario(valor);
             }
         }
 
         return contenido;
+    }
+
+    public void guardarUltimoUsuario(String usuario) throws IOException {
+        guardarPropiedadConfiguracion("ultimo", usuario);
+        new Datos().setUltimoUsuario(usuario);
+    }
+
+    public void guardarIdioma(String idioma) throws IOException {
+        guardarPropiedadConfiguracion("idioma", idioma);
+    }
+
+    private void guardarPropiedadConfiguracion(
+            String clave,
+            String valor
+    ) throws IOException {
+        Path archivoAcrIni = rutaArchivoAcrIni();
+        List<String> lineas = Files.readAllLines(
+                archivoAcrIni,
+                StandardCharsets.UTF_8
+        );
+        boolean propiedadEncontrada = false;
+
+        for (int i = 0; i < lineas.size(); i++) {
+            String[] propiedad = lineas.get(i).split("=", 2);
+            if (propiedad.length == 2
+                    && propiedad[0].trim().equalsIgnoreCase(clave)) {
+                lineas.set(i, clave + "=" + valor);
+                propiedadEncontrada = true;
+            }
+        }
+
+        if (!propiedadEncontrada) {
+            lineas.add(clave + "=" + valor);
+        }
+
+        Files.write(
+                archivoAcrIni,
+                lineas,
+                StandardCharsets.UTF_8,
+                StandardOpenOption.TRUNCATE_EXISTING,
+                StandardOpenOption.WRITE
+        );
     }
 
     public String leerMensajeIdioma(String codigo) throws IOException {

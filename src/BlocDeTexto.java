@@ -74,18 +74,78 @@ public class BlocDeTexto extends JFrame {
 
         //JMenuItem nuevo = new JMenuItem("Nuevo");
         //JMenuItem abrir = new JMenuItem("Abrir");
+        JMenuItem idioma = new JMenuItem(mensajeSeguro("1007", "Idioma"));
         JMenuItem guardar = new JMenuItem(mensajeSeguro("1053", "Guardar"));
 
         //nuevo.addActionListener(e -> texto.setText(""));
         //abrir.addActionListener(e -> abrirArchivo());
+        idioma.addActionListener(e -> mostrarSelectorIdioma());
         guardar.addActionListener(e -> guardarSalir());
 
         //archivo.add(nuevo);
         //archivo.add(abrir);
+        archivo.add(idioma);
         archivo.add(guardar);
 
         barra.add(archivo);
         setJMenuBar(barra);
+    }
+
+    private void mostrarSelectorIdioma() {
+        JComboBox<String> selectorIdioma = new JComboBox<>(
+                new String[]{
+                        "Español",
+                        "Català",
+                        "Valencià",
+                        "Galego",
+                        "Euskara",
+                        "Français",
+                        "English"
+                }
+        );
+        selectorIdioma.setSelectedItem(new Datos().getIdioma());
+
+        int resultado = JOptionPane.showConfirmDialog(
+                this,
+                selectorIdioma,
+                mensajeSeguro("1007", "Idioma"),
+                JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.QUESTION_MESSAGE
+        );
+
+        if (resultado != JOptionPane.OK_OPTION) {
+            return;
+        }
+
+        String idioma = (String) selectorIdioma.getSelectedItem();
+        if (idioma == null) {
+            return;
+        }
+        if (idioma.equals(new Datos().getIdioma())) {
+            return;
+        }
+
+        try {
+            METODOS.guardarIdioma(idioma);
+            JOptionPane.showMessageDialog(
+                    this,
+                    mensajeSeguro(
+                            "1008",
+                            "Se debe reiniciar el programa para que los cambios "
+                                    + "de idioma tengan efecto"
+                    ),
+                    mensajeSeguro("1007", "Idioma"),
+                    JOptionPane.INFORMATION_MESSAGE
+            );
+        } catch (IOException | SecurityException e) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    mensajeSeguro("1013", "No se pudo actualizar")
+                            + " acr.ini:\n" + e.getMessage(),
+                    mensajeSeguro("1011", "Error de configuración"),
+                    JOptionPane.ERROR_MESSAGE
+            );
+        }
     }
 
     private void actualizarContador() {

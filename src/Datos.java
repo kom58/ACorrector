@@ -3,6 +3,7 @@ import java.nio.file.Path;
 
 public class Datos {
     public static String usuarioActual;
+    public static String ultimoUsuario;
     public static String nombreFch;
     public static String archivoInicialFch;
     public static String envioEmailFch;
@@ -15,6 +16,7 @@ public class Datos {
 
 
     public void setUsuarioActual(String usuario){ usuarioActual = usuario;}
+    public void setUltimoUsuario(String usuario){ ultimoUsuario = usuario;}
     public void setNombreFch(String nombre){nombreFch = nombre;}
     public void setEnvioEmailFch(String emailF) { envioEmailFch = emailF;}
     public void setEmailUsuario(String emailF) { emailUsuario = emailF;}
@@ -32,6 +34,7 @@ public class Datos {
     }
 
     public String getUsuarioActual(){ return usuarioActual;}
+    public String getUltimoUsuario(){ return ultimoUsuario;}
     public String getNombreFch(){ return nombreFch;}
     public String getEnvioEmailFch(){ return envioEmailFch;}
     public String getEmailUsuario(){ return emailUsuario;}
@@ -46,6 +49,7 @@ public class Datos {
 
     public static void inicializar() {
         usuarioActual = "";
+        ultimoUsuario = "";
         nombreFch = "";
         archivoInicialFch = "";
         envioEmailFch = "";
