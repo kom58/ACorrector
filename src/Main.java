@@ -1,8 +1,11 @@
 import java.awt.Desktop;
+import java.awt.FileDialog;
+import java.awt.Frame;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Locale;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
@@ -10,7 +13,11 @@ import javax.swing.Timer;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 public class Main {
-    static void main(String[] args) {
+    private static final boolean ES_MAC_OS = System.getProperty("os.name", "")
+            .toLowerCase(Locale.ROOT)
+            .contains("mac");
+
+    public static void main(String[] args) {
         SwingUtilities.invokeLater(Main::iniciarAplicacion);
     }
 
@@ -215,10 +222,24 @@ public class Main {
 
     private static File seleccionarArchivoHtm(
             String tituloSeleccionarArchivo,
-        String descripcionArchivos
+            String descripcionArchivos
     ) {
+        String titulo = tituloSeleccionarArchivo + " HTML o PDF";
+        String[] extensiones = {
+                "htm",
+                "html",
+                "pdf",
+                "jpg",
+                "gif",
+                "png"
+        };
+
+        if (ES_MAC_OS) {
+            return seleccionarArchivoNativo(titulo, extensiones);
+        }
+
         JFileChooser selector = new JFileChooser();
-        selector.setDialogTitle(tituloSeleccionarArchivo + " HTML o PDF");
+        selector.setDialogTitle(titulo);
         selector.setAcceptAllFileFilterUsed(false);
         selector.setFileFilter(
                 new FileNameExtensionFilter(
@@ -241,6 +262,58 @@ public class Main {
         }
 
         return null;
+    }
+
+    private static File seleccionarArchivoNativo(
+            String titulo,
+            String... extensiones
+    ) {
+        FileDialog dialogo = new FileDialog(
+                (Frame) null,
+                titulo,
+                FileDialog.LOAD
+        );
+        dialogo.setMultipleMode(false);
+
+        File directorioPersonal = new File(
+                System.getProperty("user.home", ".")
+        );
+        if (directorioPersonal.isDirectory()) {
+            dialogo.setDirectory(directorioPersonal.getAbsolutePath());
+        }
+
+        dialogo.setFilenameFilter(
+                (directorio, nombre) -> tieneExtensionPermitida(
+                        nombre,
+                        extensiones
+                )
+        );
+        dialogo.setVisible(true);
+
+        String nombre = dialogo.getFile();
+        String directorio = dialogo.getDirectory();
+        dialogo.dispose();
+        if (nombre == null) {
+            return null;
+        }
+        return directorio == null
+                ? new File(nombre)
+                : new File(directorio, nombre);
+    }
+
+    private static boolean tieneExtensionPermitida(
+            String nombre,
+            String... extensiones
+    ) {
+        String nombreMinusculas = nombre.toLowerCase(Locale.ROOT);
+        for (String extension : extensiones) {
+            if (nombreMinusculas.endsWith(
+                    "." + extension.toLowerCase(Locale.ROOT)
+            )) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static String mensajeSeguro(

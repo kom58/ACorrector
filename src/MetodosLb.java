@@ -2,7 +2,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
@@ -10,68 +9,85 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Locale;
 import java.util.regex.Pattern;
 
 public class MetodosLb {
 
     private static final String NOMBRE_ARCHIVO_CONFIGURACION = "acr.ini";
-    private static final String PROPIEDAD_CARPETA_CONFIGURACION =
-            "acorrector.configDir";
     private static final Pattern PATRON_EMAIL = Pattern.compile(
             "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"
     );
 
     public String versionACrr() {
-        return "0.0.3";
+        return "1.0.8";
     }
 
     public Path rutaArchivoAcrIni() {
-        String carpetaConfiguracion = System.getProperty(
-                PROPIEDAD_CARPETA_CONFIGURACION
+        return rutaDirectorioConfiguracion().resolve(
+                NOMBRE_ARCHIVO_CONFIGURACION
         );
-        if (carpetaConfiguracion != null && !carpetaConfiguracion.isBlank()) {
-            try {
-                Path carpetaEjecutable = Path.of(carpetaConfiguracion)
+    }
+
+    private Path rutaDirectorioConfiguracion() {
+        Path directorioUsuario = rutaDirectorioUsuario();
+        String sistemaOperativo = System.getProperty("os.name", "")
+                .toLowerCase(Locale.ROOT);
+
+        if (sistemaOperativo.contains("mac")) {
+            return directorioUsuario
+                    .resolve("Library")
+                    .resolve("Application Support")
+                    .resolve("ACorrector");
+        }
+
+        if (sistemaOperativo.contains("win")) {
+            Path appData = rutaVariableEntorno("APPDATA");
+            if (appData == null) {
+                appData = directorioUsuario
+                        .resolve("AppData")
+                        .resolve("Roaming");
+            }
+            return appData.resolve("ACorrector");
+        }
+
+        Path xdgConfigHome = rutaVariableEntorno("XDG_CONFIG_HOME");
+        if (xdgConfigHome == null) {
+            xdgConfigHome = directorioUsuario.resolve(".config");
+        }
+        return xdgConfigHome.resolve("ACorrector");
+    }
+
+    private Path rutaDirectorioUsuario() {
+        try {
+            String directorioUsuario = System.getProperty("user.home", "");
+            if (!directorioUsuario.isBlank()) {
+                return Path.of(directorioUsuario)
                         .toAbsolutePath()
                         .normalize();
-                Path juntoEjecutable = carpetaEjecutable.resolve(
-                        NOMBRE_ARCHIVO_CONFIGURACION
-                );
-                if (Files.isRegularFile(juntoEjecutable)
-                        || (Files.isDirectory(carpetaEjecutable)
-                        && Files.isWritable(carpetaEjecutable))) {
-                    return juntoEjecutable;
-                }
-            } catch (InvalidPathException | SecurityException e) {
-                // Si la carpeta del ejecutable no es utilizable, se conserva
-                // la ubicacion alternativa junto al JAR extraido.
             }
+        } catch (InvalidPathException | SecurityException e) {
+            // Si user.home no está disponible, se usa el directorio actual.
         }
 
-        try {
-            Path ubicacionAplicacion = Path.of(
-                    MetodosLb.class.getProtectionDomain()
-                            .getCodeSource()
-                            .getLocation()
-                            .toURI()
-            ).toAbsolutePath().normalize();
-
-            // Al ejecutar un JAR, su carpeta es la carpeta de la aplicacion.
-            if (Files.isRegularFile(ubicacionAplicacion)) {
-                Path carpetaJar = ubicacionAplicacion.getParent();
-                if (carpetaJar != null) {
-                    return carpetaJar.resolve(NOMBRE_ARCHIVO_CONFIGURACION);
-                }
-            }
-        } catch (NullPointerException | SecurityException | URISyntaxException e) {
-            // Si no se puede obtener la ubicacion del codigo, se usa el
-            // directorio desde el que se ha iniciado la aplicacion.
-        }
-
-        return Path.of(System.getProperty("user.dir"))
+        return Path.of(System.getProperty("user.dir", "."))
                 .toAbsolutePath()
-                .normalize()
-                .resolve(NOMBRE_ARCHIVO_CONFIGURACION);
+                .normalize();
+    }
+
+    private Path rutaVariableEntorno(String variable) {
+        try {
+            String valor = System.getenv(variable);
+            if (valor != null && !valor.isBlank()) {
+                Path ruta = Path.of(valor);
+                if (ruta.isAbsolute()) {
+                    return ruta.normalize();
+                }
+            }
+        } catch (InvalidPathException | SecurityException e) {
+            // Si la variable no contiene una ruta válida, se usa el fallback.
+        }
+        return null;
     }
 
     public boolean crearArchivoAcrIni() throws IOException {
@@ -113,6 +129,7 @@ public class MetodosLb {
                 + "ultimo=" + System.lineSeparator();
 
         Path archivoAcrIni = rutaArchivoAcrIni();
+        Files.createDirectories(archivoAcrIni.getParent());
         Files.writeString(
                 archivoAcrIni,
                 contenido,

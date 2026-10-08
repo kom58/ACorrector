@@ -8,12 +8,17 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.Locale;
 
 public class BlocDeTexto extends JFrame {
     private static final long serialVersionUID = 1L;
+    private static final boolean ES_MAC_OS = System.getProperty("os.name", "")
+            .toLowerCase(Locale.ROOT)
+            .contains("mac");
     private static final MetodosLb METODOS = new MetodosLb();
     private final JTextArea texto = new JTextArea();
     private final JFileChooser selector = new JFileChooser();
+    private File ultimoDirectorio = obtenerDirectorioPersonal();
     private final JLabel contador = new JLabel();
 
     private final String etiquetaPalabras;
@@ -47,7 +52,7 @@ public class BlocDeTexto extends JFrame {
         add(new JScrollPane(texto), BorderLayout.CENTER);
 
         // Contador de palabras
-        contador.setText(etiquetaPalabras + ": 0");
+        contador.setText(etiquetaPalabras + ": 0 " + "     " + Datos.usuarioActual);
         contador.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
         add(contador, BorderLayout.SOUTH);
 
@@ -71,6 +76,7 @@ public class BlocDeTexto extends JFrame {
         // Menú Archivo
         JMenuBar barra = new JMenuBar();
         JMenu archivo = new JMenu(mensajeSeguro("1052", "Archivo"));
+        JMenu ayuda = new JMenu(mensajeSeguro("1100", "Ayuda"));
 
         //JMenuItem nuevo = new JMenuItem("Nuevo");
         //JMenuItem abrir = new JMenuItem("Abrir");
@@ -87,8 +93,26 @@ public class BlocDeTexto extends JFrame {
         archivo.add(idioma);
         archivo.add(guardar);
 
+        JMenuItem acercaDe = new JMenuItem(
+                mensajeSeguro("1101", "Acerca de")
+        );
+        acercaDe.addActionListener(e -> mostrarAcercaDe());
+        ayuda.add(acercaDe);
+
         barra.add(archivo);
+        barra.add(ayuda);
         setJMenuBar(barra);
+    }
+
+    private void mostrarAcercaDe() {
+        JOptionPane.showMessageDialog(
+                this,
+                "ACorrector\n"
+                        + mensajeSeguro("1102", "Versión") + ": "
+                        + METODOS.versionACrr(),
+                mensajeSeguro("1101", "Acerca de"),
+                JOptionPane.INFORMATION_MESSAGE
+        );
     }
 
     private void mostrarSelectorIdioma() {
@@ -155,13 +179,97 @@ public class BlocDeTexto extends JFrame {
                 ? 0
                 : contenido.split("\\s+").length;
 
-        contador.setText(etiquetaPalabras + ": " + palabras);
+        contador.setText(etiquetaPalabras + ": " + palabras + "     " + Datos.usuarioActual);
     }
 
     private void abrirArchivo() {
-        if (selector.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
-            cargarArchivo(selector.getSelectedFile());
+        File archivo = seleccionarArchivo(selector);
+        if (archivo != null) {
+            cargarArchivo(archivo);
         }
+    }
+
+    private File seleccionarArchivo(
+            JFileChooser selectorSwing,
+            String... extensiones
+    ) {
+        File archivo;
+        if (ES_MAC_OS) {
+            archivo = seleccionarArchivoNativo(
+                    selectorSwing.getDialogTitle(),
+                    extensiones
+            );
+        } else {
+            if (ultimoDirectorio.isDirectory()) {
+                selectorSwing.setCurrentDirectory(ultimoDirectorio);
+            }
+            if (selectorSwing.showOpenDialog(this)
+                    != JFileChooser.APPROVE_OPTION) {
+                return null;
+            }
+            archivo = selectorSwing.getSelectedFile();
+        }
+
+        if (archivo != null) {
+            File directorio = archivo.getParentFile();
+            if (directorio != null && directorio.isDirectory()) {
+                ultimoDirectorio = directorio;
+            }
+        }
+        return archivo;
+    }
+
+    private File seleccionarArchivoNativo(
+            String titulo,
+            String... extensiones
+    ) {
+        FileDialog dialogo = new FileDialog(this, titulo, FileDialog.LOAD);
+        dialogo.setMultipleMode(false);
+        if (ultimoDirectorio.isDirectory()) {
+            dialogo.setDirectory(ultimoDirectorio.getAbsolutePath());
+        }
+        if (extensiones.length > 0) {
+            dialogo.setFilenameFilter(
+                    (directorio, nombre) -> tieneExtensionPermitida(
+                            nombre,
+                            extensiones
+                    )
+            );
+        }
+        dialogo.setVisible(true);
+
+        String nombre = dialogo.getFile();
+        String directorio = dialogo.getDirectory();
+        dialogo.dispose();
+        if (nombre == null) {
+            return null;
+        }
+        return directorio == null
+                ? new File(nombre)
+                : new File(directorio, nombre);
+    }
+
+    private static boolean tieneExtensionPermitida(
+            String nombre,
+            String... extensiones
+    ) {
+        String nombreMinusculas = nombre.toLowerCase(Locale.ROOT);
+        for (String extension : extensiones) {
+            if (nombreMinusculas.endsWith(
+                    "." + extension.toLowerCase(Locale.ROOT)
+            )) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static File obtenerDirectorioPersonal() {
+        String rutaPersonal = System.getProperty("user.home", ".");
+        File directorioPersonal = new File(rutaPersonal);
+        return directorioPersonal.isDirectory()
+                ? directorioPersonal
+                : new File(".").getAbsoluteFile();
     }
 
     public void cargarArchivo(File archivo) {
