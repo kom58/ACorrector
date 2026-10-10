@@ -3,11 +3,13 @@
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.filechooser.FileView;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.text.Normalizer;
 import java.util.Locale;
 
 public class BlocDeTexto extends JFrame {
@@ -44,6 +46,7 @@ public class BlocDeTexto extends JFrame {
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         //setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);         // No deja cerrar !!!!
         setLocationRelativeTo(null);
+        normalizarNombresSelector(selector);
 
         // Área de escritura
         texto.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 16));
@@ -217,6 +220,20 @@ public class BlocDeTexto extends JFrame {
             }
         }
         return archivo;
+    }
+
+    private static void normalizarNombresSelector(JFileChooser selectorSwing) {
+        selectorSwing.setFileView(new FileView() {
+            @Override
+            public String getName(File archivo) {
+                String nombre = selectorSwing.getFileSystemView()
+                        .getSystemDisplayName(archivo);
+                if (nombre == null || nombre.isBlank()) {
+                    return null;
+                }
+                return Normalizer.normalize(nombre, Normalizer.Form.NFC);
+            }
+        });
     }
 
     private File seleccionarArchivoNativo(

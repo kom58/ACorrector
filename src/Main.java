@@ -5,12 +5,14 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.text.Normalizer;
 import java.util.Locale;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.filechooser.FileView;
 
 public class Main {
     private static final boolean ES_MAC_OS = System.getProperty("os.name", "")
@@ -66,7 +68,7 @@ public class Main {
         final String tituloNombreNoValido;
         final String mensajeBienvenida;
         final String tituloBienvenida;
-        final String errorNavegador;
+        final String errorAplicacionPredeterminada;
         final String tituloError;
         final String errorAbrirArchivo;
         final String tituloSeleccionarArchivo;
@@ -78,7 +80,7 @@ public class Main {
             tituloNombreNoValido = m.leerMensajeIdioma("1004");
             mensajeBienvenida = m.leerMensajeIdioma("1005");
             tituloBienvenida = m.leerMensajeIdioma("1006");
-            errorNavegador = m.leerMensajeIdioma("1030");
+            errorAplicacionPredeterminada = m.leerMensajeIdioma("1030");
             tituloError = m.leerMensajeIdioma("1031");
             errorAbrirArchivo = m.leerMensajeIdioma("1040");
             tituloSeleccionarArchivo = m.leerMensajeIdioma("1050");
@@ -148,22 +150,22 @@ public class Main {
                 JOptionPane.INFORMATION_MESSAGE
         );
 
-        File archivoHtm = seleccionarArchivoHtm(
+        File archivo = seleccionarArchivo(
                 tituloSeleccionarArchivo,
                 descripcionArchivos
         );
-        if (archivoHtm == null) {
+        if (archivo == null) {
             return;
         }
 
         //Datos d = new Datos();
-        Datos.nombreFch = archivoHtm.getName();
-        Datos.archivoInicialFch = archivoHtm.getAbsolutePath();
-        d.setArchivoInicialFch(archivoHtm.getAbsolutePath());               // !!!
+        Datos.nombreFch = archivo.getName();
+        Datos.archivoInicialFch = archivo.getAbsolutePath();
+        d.setArchivoInicialFch(archivo.getAbsolutePath());               // !!!
 
-        abrirEnNavegador(
-                archivoHtm,
-                errorNavegador,
+        abrirArchivo(
+                archivo,
+                errorAplicacionPredeterminada,
                 tituloError,
                 errorAbrirArchivo
         );
@@ -191,17 +193,27 @@ public class Main {
         temporizador.start();
     }
 
-    private static void abrirEnNavegador(
-            File archivoHtm,
-            String errorNavegador,
+    private static void abrirArchivo(
+            File archivo,
+            String errorAplicacionPredeterminada,
             String tituloError,
             String errorAbrirArchivo
     ) {
-        if (!Desktop.isDesktopSupported()
-                || !Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
+        if (!archivo.isFile()) {
             JOptionPane.showMessageDialog(
                     null,
-                    errorNavegador,
+                    errorAbrirArchivo + ":\n" + archivo.getAbsolutePath(),
+                    tituloError,
+                    JOptionPane.ERROR_MESSAGE
+            );
+            return;
+        }
+
+        if (!Desktop.isDesktopSupported()
+                || !Desktop.getDesktop().isSupported(Desktop.Action.OPEN)) {
+            JOptionPane.showMessageDialog(
+                    null,
+                    errorAplicacionPredeterminada,
                     tituloError,
                     JOptionPane.ERROR_MESSAGE
             );
@@ -209,18 +221,24 @@ public class Main {
         }
 
         try {
-            Desktop.getDesktop().browse(archivoHtm.toURI());
-        } catch (IOException e) {
+            Desktop.getDesktop().open(archivo);
+        } catch (IOException | SecurityException e) {
+            String detalle = e.getMessage();
             JOptionPane.showMessageDialog(
                     null,
-                    errorAbrirArchivo,
+                    errorAbrirArchivo
+                            + ":\n"
+                            + archivo.getAbsolutePath()
+                            + (detalle == null || detalle.isBlank()
+                                    ? ""
+                                    : "\n" + detalle),
                     tituloError,
                     JOptionPane.ERROR_MESSAGE
             );
         }
     }
 
-    private static File seleccionarArchivoHtm(
+    private static File seleccionarArchivo(
             String tituloSeleccionarArchivo,
             String descripcionArchivos
     ) {
@@ -239,6 +257,7 @@ public class Main {
         }
 
         JFileChooser selector = new JFileChooser();
+        normalizarNombresSelector(selector);
         selector.setDialogTitle(titulo);
         selector.setAcceptAllFileFilterUsed(false);
         selector.setFileFilter(
@@ -262,6 +281,20 @@ public class Main {
         }
 
         return null;
+    }
+
+    private static void normalizarNombresSelector(JFileChooser selector) {
+        selector.setFileView(new FileView() {
+            @Override
+            public String getName(File archivo) {
+                String nombre = selector.getFileSystemView()
+                        .getSystemDisplayName(archivo);
+                if (nombre == null || nombre.isBlank()) {
+                    return null;
+                }
+                return Normalizer.normalize(nombre, Normalizer.Form.NFC);
+            }
+        });
     }
 
     private static File seleccionarArchivoNativo(
