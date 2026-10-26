@@ -15,9 +15,13 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.filechooser.FileView;
 
 public class Main {
-    private static final boolean ES_MAC_OS = System.getProperty("os.name", "")
-            .toLowerCase(Locale.ROOT)
-            .contains("mac");
+    private static final String SISTEMA_OPERATIVO = System.getProperty(
+            "os.name",
+            ""
+    ).toLowerCase(Locale.ROOT);
+    private static final boolean USA_SELECTOR_NATIVO =
+            SISTEMA_OPERATIVO.contains("mac")
+                    || SISTEMA_OPERATIVO.contains("win");
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(Main::iniciarAplicacion);
@@ -73,6 +77,7 @@ public class Main {
         final String errorAbrirArchivo;
         final String tituloSeleccionarArchivo;
         final String descripcionArchivos;
+        final String formatoNoPermitido;
         try {
             tituloInicioSesion = m.leerMensajeIdioma("1001");
             mensajeNombre = m.leerMensajeIdioma("1002");
@@ -85,6 +90,11 @@ public class Main {
             errorAbrirArchivo = m.leerMensajeIdioma("1040");
             tituloSeleccionarArchivo = m.leerMensajeIdioma("1050");
             descripcionArchivos = m.leerMensajeIdioma("1051");
+            formatoNoPermitido = mensajeSeguro(
+                    m,
+                    "1092",
+                    "El formato del archivo seleccionado no está permitido."
+            );
         } catch (IOException | SecurityException e) {
             JOptionPane.showMessageDialog(
                     null,
@@ -152,7 +162,8 @@ public class Main {
 
         File archivo = seleccionarArchivo(
                 tituloSeleccionarArchivo,
-                descripcionArchivos
+                descripcionArchivos,
+                formatoNoPermitido
         );
         if (archivo == null) {
             return;
@@ -240,7 +251,8 @@ public class Main {
 
     private static File seleccionarArchivo(
             String tituloSeleccionarArchivo,
-            String descripcionArchivos
+            String descripcionArchivos,
+            String formatoNoPermitido
     ) {
         String titulo = tituloSeleccionarArchivo + " HTML o PDF";
         String[] extensiones = {
@@ -252,35 +264,48 @@ public class Main {
                 "png"
         };
 
-        if (ES_MAC_OS) {
-            return seleccionarArchivoNativo(titulo, extensiones);
+        File archivo;
+        if (USA_SELECTOR_NATIVO) {
+            archivo = seleccionarArchivoNativo(titulo, extensiones);
+        } else {
+            JFileChooser selector = new JFileChooser();
+            normalizarNombresSelector(selector);
+            selector.setDialogTitle(titulo);
+            selector.setAcceptAllFileFilterUsed(false);
+            selector.setFileFilter(
+                    new FileNameExtensionFilter(
+                            descripcionArchivos
+                                    + ": HTML, PDF, JPG, GIF, PNG "
+                                    + "(*.htm, *.html, *.pdf, *.jpg, *.gif, *.png)",
+                            "htm",
+                            "html",
+                            "pdf",
+                            "jpg",
+                            "gif",
+                            "png"
+                    )
+            );
+
+            if (selector.showOpenDialog(null)
+                    != JFileChooser.APPROVE_OPTION) {
+                return null;
+            }
+            archivo = selector.getSelectedFile();
         }
 
-        JFileChooser selector = new JFileChooser();
-        normalizarNombresSelector(selector);
-        selector.setDialogTitle(titulo);
-        selector.setAcceptAllFileFilterUsed(false);
-        selector.setFileFilter(
-                new FileNameExtensionFilter(
-                        descripcionArchivos
-                                + ": HTML, PDF, JPG, GIF, PNG "
-                                + "(*.htm, *.html, *.pdf, *.jpg, *.gif, *.png)",
-                        "htm",
-                        "html",
-                        "pdf",
-                        "jpg",
-                        "gif",
-                        "png"
-                )
-        );
-
-        int resultado = selector.showOpenDialog(null);
-
-        if (resultado == JFileChooser.APPROVE_OPTION) {
-            return selector.getSelectedFile();
+        if (archivo == null) {
+            return null;
         }
-
-        return null;
+        if (!tieneExtensionPermitida(archivo.getName(), extensiones)) {
+            JOptionPane.showMessageDialog(
+                    null,
+                    formatoNoPermitido,
+                    titulo,
+                    JOptionPane.WARNING_MESSAGE
+            );
+            return null;
+        }
+        return archivo;
     }
 
     private static void normalizarNombresSelector(JFileChooser selector) {

@@ -10,17 +10,12 @@ import java.nio.file.StandardOpenOption;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
-import java.util.regex.Pattern;
 
 public class MetodosLb {
 
     private static final String NOMBRE_ARCHIVO_CONFIGURACION = "acr.ini";
-    private static final Pattern PATRON_EMAIL = Pattern.compile(
-            "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"
-    );
-
     public String versionACrr() {
-        return "1.0.11";
+        return "1.0.15";
     }
 
     public Path rutaArchivoAcrIni() {
@@ -91,11 +86,6 @@ public class MetodosLb {
     }
 
     public boolean crearArchivoAcrIni() throws IOException {
-        String email = pedirEmailValido();
-        if (email == null) {
-            return false;
-        }
-
         JComboBox<String> selectorIdioma = new JComboBox<>(
                 new String[]{
                         "Español",
@@ -121,10 +111,10 @@ public class MetodosLb {
 
         String idioma = (String) selectorIdioma.getSelectedItem();
         Datos dat = new Datos();
-        dat.setEmailUsuario(email);
+        dat.setEmailUsuario("");
         dat.setIdioma(idioma);
 
-        String contenido = "email=" + email + System.lineSeparator()
+        String contenido = "email=" + System.lineSeparator()
                 + "idioma=" + idioma + System.lineSeparator()
                 + "ultimo=" + System.lineSeparator();
 
@@ -269,34 +259,6 @@ public class MetodosLb {
 
         throw new IOException("No se encuentra el archivo " + nombreArchivo);
     }
-
-    private String pedirEmailValido() {
-        while (true) {
-            String email = JOptionPane.showInputDialog(
-                    null,
-                    "Introduce tu email:",
-                    "Configuración inicial",
-                    JOptionPane.QUESTION_MESSAGE
-            );
-
-            if (email == null) {
-                return null;
-            }
-
-            email = email.trim();
-            if (PATRON_EMAIL.matcher(email).matches()) {
-                return email;
-            }
-
-            JOptionPane.showMessageDialog(
-                    null,
-                    "Introduce un email válido.",
-                    "Email no válido",
-                    JOptionPane.WARNING_MESSAGE
-            );
-        }
-    }
-
 
     public Path escribirInforme() throws IOException {
 

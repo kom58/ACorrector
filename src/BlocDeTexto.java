@@ -14,9 +14,13 @@ import java.util.Locale;
 
 public class BlocDeTexto extends JFrame {
     private static final long serialVersionUID = 1L;
-    private static final boolean ES_MAC_OS = System.getProperty("os.name", "")
-            .toLowerCase(Locale.ROOT)
-            .contains("mac");
+    private static final String SISTEMA_OPERATIVO = System.getProperty(
+            "os.name",
+            ""
+    ).toLowerCase(Locale.ROOT);
+    private static final boolean USA_SELECTOR_NATIVO =
+            SISTEMA_OPERATIVO.contains("mac")
+                    || SISTEMA_OPERATIVO.contains("win");
     private static final MetodosLb METODOS = new MetodosLb();
     private final JTextArea texto = new JTextArea();
     private final JFileChooser selector = new JFileChooser();
@@ -197,7 +201,7 @@ public class BlocDeTexto extends JFrame {
             String... extensiones
     ) {
         File archivo;
-        if (ES_MAC_OS) {
+        if (USA_SELECTOR_NATIVO) {
             archivo = seleccionarArchivoNativo(
                     selectorSwing.getDialogTitle(),
                     extensiones
@@ -213,11 +217,26 @@ public class BlocDeTexto extends JFrame {
             archivo = selectorSwing.getSelectedFile();
         }
 
-        if (archivo != null) {
-            File directorio = archivo.getParentFile();
-            if (directorio != null && directorio.isDirectory()) {
-                ultimoDirectorio = directorio;
-            }
+        if (archivo == null) {
+            return null;
+        }
+        if (extensiones.length > 0
+                && !tieneExtensionPermitida(archivo.getName(), extensiones)) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    mensajeSeguro(
+                            "1092",
+                            "El formato del archivo seleccionado no está permitido."
+                    ),
+                    selectorSwing.getDialogTitle(),
+                    JOptionPane.WARNING_MESSAGE
+            );
+            return null;
+        }
+
+        File directorio = archivo.getParentFile();
+        if (directorio != null && directorio.isDirectory()) {
+            ultimoDirectorio = directorio;
         }
         return archivo;
     }
@@ -316,20 +335,6 @@ public class BlocDeTexto extends JFrame {
         } catch (IOException | SecurityException e) {
             mostrarError(errorGuardarInforme + ":\n" + e.getMessage());
         }
-
-        /*
-        if (selector.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
-            try {
-                Files.writeString(
-                        selector.getSelectedFile().toPath(),
-                        texto.getText(),
-                        StandardCharsets.UTF_8
-                );
-            } catch (IOException e) {
-                mostrarError("No se pudo guardar el archivo.");
-            }
-        }
-         */
     }
 
     private void mostrarError(String mensaje) {
